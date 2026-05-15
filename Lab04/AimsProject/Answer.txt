@@ -1,0 +1,63 @@
+
+1. Which classes are aggregates of other classes?
+- Cart: This class contains an ArrayList of Media objects
+- Store: This class contains an ArrayList of Media objects
+- CompactDisc: This class contains an ArrayList of Track objects
+- Book: This class contains an ArrayList of authors 
+
+2. If the passing object is not an instance of Media, what happens?
+If the passing object is not an instance of Media, a ClassCastException will be thrown and the program crashes. This exception happens because an object is being treated as a type it does not belong to.
+
+
+Question 12: Alternatively, to compare items in the cart, instead of using Comparator, we can use the Comparable interface and override the compareTo() method. You can refer to the Java docs to see the information of this interface.
+Suppose we are taking this Comparable interface approach.
+
+-Q: What class should implement the Comparable interface?
+
+-Ans: The class that should implement Comparable<Media> is Media, the parent class of all media types.
+the reason is that:
+Sorting is applied to all media in the cart (Books, DVDs, CDs).
+Therefore the common parent type should define the natural ordering that all subclasses inherit.
+
+-Q: In those classes, how should you implement the compareTo() method be to reflect the ordering that we want?
+
+-Ans: Inside Media.compareTo(Media other) we should define one single natural ordering.
+For example, if the default ordering is:
+by title (ascending), then by cost (descending)
+
+-Q: Can we have two ordering rules of the item (by title then cost and by cost then title) if we use this Comparable interface approach?
+
+-Ans: No, we cannot
+Comparable allows only one ordering — the “natural order” defined inside compareTo().
+If we need two different sort rules:
+	•	by title → cost
+	•	or by cost → title
+then using only Comparable is insufficient.
+So we still need Comparator objects for alternative orders.
+
+-Q Suppose the DVDs has a different ordering rule from the other media types, that is by title, then decreasing length, then cost. How would you modify your code to allow this?
+
+-Ans: I would modify my code like this following code:
+Keep Comparable in Media, use a special Comparator for DVDs
+Define DVD-specific sorting rule in a separate Comparator:
+\\\\\
+    public class DvdComparator implements Comparator<Media> {
+        @Override
+        public int compare(Media m1, Media m2) {
+            if (m1 instanceof DigitalVideoDisc && m2 instanceof DigitalVideoDisc) {
+                DigitalVideoDisc d1 = (DigitalVideoDisc) m1;
+                DigitalVideoDisc d2 = (DigitalVideoDisc) m2;
+
+                int titleCmp = d1.getTitle().compareToIgnoreCase(d2.getTitle());
+                if (titleCmp != 0) return titleCmp;
+
+                int lengthCmp = Integer.compare(d2.getLength(), d1.getLength()); // descending
+                if (lengthCmp != 0) return lengthCmp;
+
+                return Float.compare(d1.getCost(), d2.getCost()); // ascending or your rule
+            }
+
+            // default ordering for non-DVDs
+            return m1.compareTo(m2);
+        }
+    }
